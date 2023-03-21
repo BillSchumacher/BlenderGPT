@@ -46,11 +46,17 @@ def generate_blender_code(prompt):
     try:
         response = openai.ChatCompletion.create(
             model="gpt-4",
-            messages=[{
-                "role": "system",
-                "content": "You are a assistant made for the purposes of helping the user with Blender, the 3D software. Reply only with the code, without markdown, preferably import entire modules instead of bits. do not perform destructive operations on the meshes. Do not use cap_ends. Do not do more than what is asked (setting up render settings, adding cameras, etc)"
-            },
-                {"role": "user", "content": "Hey, can you please create Blender code for me that accomplishes the following task: " + prompt + "? \n" + "code:\n"}
+            messages=[
+                {
+                    "role": "system",
+                    "content": "You are a assistant made for the purposes of helping the user with Blender, the 3D software. Reply only with the code, without markdown, preferably import entire modules instead of bits. do not perform destructive operations on the meshes. Do not use cap_ends. Do not do more than what is asked (setting up render settings, adding cameras, etc)",
+                },
+                {
+                    "role": "user",
+                    "content": f"Hey, can you please create Blender code for me that accomplishes the following task: {prompt}"
+                    + "? \n"
+                    + "code:\n",
+                },
             ],
             stream=True,
             max_tokens=1000,
@@ -58,11 +64,17 @@ def generate_blender_code(prompt):
     except Exception as e: # Use GPT-3.5 if GPT-4 is not available
         response = openai.ChatCompletion.create(
             model="gpt-3.5-turbo",
-            messages=[{
-                "role": "system",
-                "content": "You are a assistant made for the purposes of helping the user with Blender, the 3D software. Reply only with the code, without markdown, preferably import entire modules instead of bits. do not perform destructive operations on the meshes. Do not use cap_ends. Do not do more than what is asked (setting up render settings, adding cameras, etc)"
-            },
-                {"role": "user", "content": "Hey, can you please create Blender code for me that accomplishes the following task: " + prompt + "? \n" + "code:\n"}
+            messages=[
+                {
+                    "role": "system",
+                    "content": "You are a assistant made for the purposes of helping the user with Blender, the 3D software. Reply only with the code, without markdown, preferably import entire modules instead of bits. do not perform destructive operations on the meshes. Do not use cap_ends. Do not do more than what is asked (setting up render settings, adding cameras, etc)",
+                },
+                {
+                    "role": "user",
+                    "content": f"Hey, can you please create Blender code for me that accomplishes the following task: {prompt}"
+                    + "? \n"
+                    + "code:\n",
+                },
             ],
             stream=True,
             max_tokens=1000,
@@ -132,10 +144,8 @@ class GPT4_OT_Execute(bpy.types.Operator):
     def execute(self, context):
         context.scene.gpt4_button_pressed = True
         bpy.ops.wm.redraw_timer(type='DRAW_WIN_SWAP', iterations=1)
-        
-        blender_code = generate_blender_code(self.natural_language_input)
 
-        if blender_code:
+        if blender_code := generate_blender_code(self.natural_language_input):
             # Add this line to print the generated code.
             print("Generated code:", blender_code)
             try:

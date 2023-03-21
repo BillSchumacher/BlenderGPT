@@ -310,13 +310,12 @@ class RequestsCookieJar(cookielib.CookieJar, MutableMapping):
 
         :rtype: dict
         """
-        dictionary = {}
-        for cookie in iter(self):
-            if (domain is None or cookie.domain == domain) and (
-                path is None or cookie.path == path
-            ):
-                dictionary[cookie.name] = cookie.value
-        return dictionary
+        return {
+            cookie.name: cookie.value
+            for cookie in iter(self)
+            if (domain is None or cookie.domain == domain)
+            and (path is None or cookie.path == path)
+        }
 
     def __contains__(self, name):
         try:
@@ -376,10 +375,12 @@ class RequestsCookieJar(cookielib.CookieJar, MutableMapping):
         :return: cookie.value
         """
         for cookie in iter(self):
-            if cookie.name == name:
-                if domain is None or cookie.domain == domain:
-                    if path is None or cookie.path == path:
-                        return cookie.value
+            if (
+                cookie.name == name
+                and (domain is None or cookie.domain == domain)
+                and (path is None or cookie.path == path)
+            ):
+                return cookie.value
 
         raise KeyError(f"name={name!r}, domain={domain!r}, path={path!r}")
 
@@ -397,16 +398,18 @@ class RequestsCookieJar(cookielib.CookieJar, MutableMapping):
         """
         toReturn = None
         for cookie in iter(self):
-            if cookie.name == name:
-                if domain is None or cookie.domain == domain:
-                    if path is None or cookie.path == path:
-                        if toReturn is not None:
-                            # if there are multiple cookies that meet passed in criteria
-                            raise CookieConflictError(
-                                f"There are multiple cookies with name, {name!r}"
-                            )
-                        # we will eventually return this as long as no cookie conflict
-                        toReturn = cookie.value
+            if (
+                cookie.name == name
+                and (domain is None or cookie.domain == domain)
+                and (path is None or cookie.path == path)
+            ):
+                if toReturn is not None:
+                    # if there are multiple cookies that meet passed in criteria
+                    raise CookieConflictError(
+                        f"There are multiple cookies with name, {name!r}"
+                    )
+                # we will eventually return this as long as no cookie conflict
+                toReturn = cookie.value
 
         if toReturn:
             return toReturn
@@ -474,13 +477,12 @@ def create_cookie(name, value, **kwargs):
         "rfc2109": False,
     }
 
-    badargs = set(kwargs) - set(result)
-    if badargs:
+    if badargs := set(kwargs) - set(result):
         raise TypeError(
             f"create_cookie() got unexpected keyword arguments: {list(badargs)}"
         )
 
-    result.update(kwargs)
+    result |= kwargs
     result["port_specified"] = bool(result["port"])
     result["domain_specified"] = bool(result["domain"])
     result["domain_initial_dot"] = result["domain"].startswith(".")
